@@ -10,27 +10,37 @@ function ControlBall({ onRotate }) {
   const lastPos = useRef({ x: 0, y: 0 });
   const ballRef = useRef(null);
 
-  const handleMouseDown = (e) => {
+  // Handle mouse events
+  const handleStart = (e) => {
     setIsDragging(true);
     const rect = ballRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
+    
+    // Handle both mouse and touch events
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
     lastPos.current = {
-      x: e.clientX - centerX,
-      y: e.clientY - centerY
+      x: clientX - centerX,
+      y: clientY - centerY
     };
     e.preventDefault();
   };
 
-  const handleMouseMove = useCallback((e) => {
+  const handleMove = useCallback((e) => {
     if (!isDragging || !ballRef.current) return;
     
     const rect = ballRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     
-    const currentX = e.clientX - centerX;
-    const currentY = e.clientY - centerY;
+    // Handle both mouse and touch events
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    const currentX = clientX - centerX;
+    const currentY = clientY - centerY;
     
     const previousAngle = Math.atan2(lastPos.current.y, lastPos.current.x);
     const currentAngle = Math.atan2(currentY, currentX);
@@ -48,20 +58,32 @@ function ControlBall({ onRotate }) {
     lastPos.current = { x: currentX, y: currentY };
   }, [isDragging, rotation, onRotate]);
 
-  const handleMouseUp = useCallback(() => {
+  const handleEnd = useCallback(() => {
     setIsDragging(false);
   }, []);
 
   useEffect(() => {
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      // Mouse events
+      window.addEventListener('mousemove', handleMove);
+      window.addEventListener('mouseup', handleEnd);
+      
+      // Touch events
+      window.addEventListener('touchmove', handleMove, { passive: false });
+      window.addEventListener('touchend', handleEnd);
+      window.addEventListener('touchcancel', handleEnd);
     }
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      // Cleanup mouse events
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleEnd);
+      
+      // Cleanup touch events
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleEnd);
+      window.removeEventListener('touchcancel', handleEnd);
     };
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [isDragging, handleMove, handleEnd]);
 
   return (
     <div
@@ -79,7 +101,8 @@ function ControlBall({ onRotate }) {
       }}
     >
       <div
-        onMouseDown={handleMouseDown}
+        onMouseDown={handleStart}
+        onTouchStart={handleStart}
         style={{
           width: '100%',
           height: '100%',
@@ -92,7 +115,8 @@ function ControlBall({ onRotate }) {
           alignItems: 'center',
           justifyContent: 'center',
           boxShadow: '0 0 20px rgba(255, 255, 255, 0.2)',
-          transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+          transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+          WebkitTapHighlightColor: 'transparent' // Remove tap highlight on mobile
         }}
       >
         <div
