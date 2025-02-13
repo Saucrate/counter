@@ -39,6 +39,12 @@ function App() {
         }
     }, [user]);
 
+    useEffect(() => {
+        if (user) {
+            setCount(user.counter);
+        }
+    }, [user]);
+
     const fetchUserData = async (token) => {
         try {
             const response = await axios.get(`${API_URL}/user`, {
@@ -183,6 +189,7 @@ function App() {
             console.log('Counter response:', response.data); // Debug log
             
             if (response.data.count !== undefined) {
+                setCount(response.data.count);
                 setUser(prev => ({ ...prev, counter: response.data.count }));
             } else {
                 console.error('Invalid counter response:', response.data);
