@@ -42,40 +42,90 @@ function App() {
     const fetchUserData = async (token) => {
         try {
             const response = await axios.get(`${API_URL}/user`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             });
             setUser(response.data);
             setCount(response.data.counter);
             setView('counter');
         } catch (err) {
-            console.error('Error fetching user data:', err);
+            console.error('Fetch user error:', err);
             localStorage.removeItem('token');
+            setUser(null);
             setError('Session expired. Please login again.');
             setView('login');
         }
     };
 
-    const handleAuth = async (type) => {
+    const login = async () => {
         try {
-        setLoading(true);
+            setLoading(true);
             setError(null);
             
-            // Validate required fields
-            if (!formData.username || !formData.password || (type === 'signup' && !formData.email)) {
-                throw new Error('Please fill in all required fields');
-            }
+            const response = await axios.post(`${API_URL}/auth/login`, {
+                username: formData.username,
+                password: formData.password
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
 
-            const endpoint = type === 'login' ? '/auth/login' : '/auth/signup';
-            const response = await axios.post(`${API_URL}${endpoint}`, formData);
-            
-            localStorage.setItem('token', response.data.token);
-            setUser(response.data.user);
+            const { token, user } = response.data;
+            localStorage.setItem('token', token);
+            setUser(user);
             setView('counter');
+            setError(null);
+        } catch (err) {
+            console.error('Login error:', err);
+            setError(err.response?.data?.message || 'Failed to login');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const signup = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const response = await axios.post(`${API_URL}/auth/signup`, {
+                username: formData.username,
+                password: formData.password,
+                email: formData.email,
+                firstName: formData.firstName,
+                lastName: formData.lastName
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const { token, user } = response.data;
+            localStorage.setItem('token', token);
+            setUser(user);
+            setView('counter');
+            setError(null);
+        } catch (err) {
+            console.error('Signup error:', err);
+            setError(err.response?.data?.message || 'Failed to signup');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAuth = async (type) => {
+        try {
+            if (type === 'login') {
+                await login();
+            } else if (type === 'signup') {
+                await signup();
+            }
         } catch (err) {
             console.error('Auth error:', err);
             setError(err.response?.data?.message || err.message || 'Authentication failed');
-        } finally {
-                setLoading(false);
         }
     };
 
@@ -119,17 +169,19 @@ function App() {
             const response = await axios.post(
                 `${API_URL}/counter/${action}`,
                 {},
-                { headers: { Authorization: `Bearer ${token}` }}
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
             );
-            setCount(response.data.count);
+            setUser(prev => ({ ...prev, counter: response.data.count }));
         } catch (err) {
-                setError('Failed to update counter');
-            if (err.response?.status === 401) {
-                localStorage.removeItem('token');
-                setView('login');
-            }
+            console.error('Counter update error:', err);
+            setError('Failed to update counter');
         } finally {
-                setLoading(false);
+            setLoading(false);
         }
     };
 
