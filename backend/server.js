@@ -12,7 +12,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:5000', 'https://your-frontend-domain.onrender.com'],
+    origin: ['http://localhost:3000', 'https://countef.onrender.com'],
     credentials: true
 }));
 app.use(express.json());
