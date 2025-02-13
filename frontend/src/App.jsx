@@ -189,8 +189,9 @@ function App() {
             console.log('Counter response:', response.data); // Debug log
             
             if (response.data.count !== undefined) {
-                setCount(response.data.count);
-                setUser(prev => ({ ...prev, counter: response.data.count }));
+                const newCount = response.data.count;
+                setUser(prev => ({ ...prev, counter: newCount }));
+                console.log('Updated user counter:', newCount); // Debug log
             } else {
                 console.error('Invalid counter response:', response.data);
             }
@@ -430,13 +431,13 @@ function App() {
                                     {...animations.counter}
                                 >
                                     <motion.span
-                                        key={count}
+                                        key={user?.counter}
                                         style={styles.counterValue}
                                         initial={{ scale: 1.5, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 1 }}
                                         transition={{ type: 'spring', stiffness: 300 }}
                                     >
-                                        {count}
+                                        {user?.counter}
                                     </motion.span>
                                 </motion.div>
 
