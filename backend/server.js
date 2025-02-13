@@ -121,6 +121,16 @@ app.post('/api/test/create-user', async (req, res) => {
     }
 });
 
+// Add this route to test counter functionality
+app.get('/api/test/counter/:userId', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId);
+        res.json({ counter: user.counter });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);

@@ -166,6 +166,9 @@ function App() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
+            
+            console.log('Updating counter:', action); // Debug log
+            
             const response = await axios.post(
                 `${API_URL}/counter/${action}`,
                 {},
@@ -176,9 +179,21 @@ function App() {
                     }
                 }
             );
-            setUser(prev => ({ ...prev, counter: response.data.count }));
+            
+            console.log('Counter response:', response.data); // Debug log
+            
+            if (response.data.count !== undefined) {
+                setUser(prev => ({ ...prev, counter: response.data.count }));
+            } else {
+                console.error('Invalid counter response:', response.data);
+            }
         } catch (err) {
             console.error('Counter update error:', err);
+            if (err.response?.status === 401) {
+                localStorage.removeItem('token');
+                setUser(null);
+                setView('login');
+            }
             setError('Failed to update counter');
         } finally {
             setLoading(false);
